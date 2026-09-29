@@ -253,6 +253,9 @@ curl http://localhost:8000/health
 docker compose logs agent
 ```
 
+Ở cấu hình cuối của CP4, cổng `localhost:8000` do Nginx nhận; container
+`agent` chỉ mở cổng `8000` trong mạng Compose để có thể chạy nhiều bản sao.
+
 ### ✅ Checkpoint 2 — Start +105 phút
 
 ```bash
@@ -351,6 +354,15 @@ verify_api_key (dependency)  →  limiter.check  →  guard.check
 Chặn **trước** khi gọi LLM. Chặn sau thì bạn vừa mất tiền vừa trả lỗi cho user.
 
 ### Thử chạy
+
+Docker Compose tự đọc `.env`, nhưng terminal chạy `curl` không tự nạp biến từ
+file này. Nạp khóa vào terminal trước khi dùng `$AGENT_API_KEY`:
+
+```bash
+set -a
+source .env
+set +a
+```
 
 ```bash
 # Không key → 401
@@ -477,8 +489,8 @@ rồi bị kill cứng — tệ hơn là không viết gì.
 ### Thử chạy
 
 ```bash
-docker compose up -d --scale agent=3
-docker compose ps                      # 3 container agent
+docker compose up -d --build --scale agent=3
+docker compose ps                      # 3 container agent, 1 nginx, 1 Redis
 
 # Gọi nhiều lần với cùng user — history_length phải TĂNG DẦN dù đổi container
 for i in $(seq 1 5); do
@@ -489,9 +501,9 @@ for i in $(seq 1 5); do
 done
 ```
 
-Muốn xem load balancing thật thì bật thêm service `nginx` (cấu hình đã có sẵn ở
-`nginx/nginx.conf`) và gọi qua cổng 80 — phần mở rộng tùy chọn, không phải
-bonus chấm điểm riêng.
+Nginx nhận cổng `localhost:8000` và chuyển request tới các container `agent`.
+Agent chỉ mở cổng trong mạng Compose nên có thể scale lên 3 bản sao mà không
+tranh cổng host. Cả ba dùng chung Redis để đọc lịch sử của cùng một user.
 
 ### ✅ Checkpoint 4 — Start +200 phút
 
