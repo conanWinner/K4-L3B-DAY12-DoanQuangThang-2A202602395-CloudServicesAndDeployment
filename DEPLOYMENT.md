@@ -26,6 +26,10 @@
 | Bản triển khai | `714019a5-6e9f-4439-a35d-4f84eb9bb448` |
 | Kiểm tra sức khỏe | Railway dùng `/ready`; bản triển khai dùng `Dockerfile` |
 
+Bản triển khai thủ công ban đầu được ghi trong bảng trên. Bonus CI/CD đã tạo
+bản mới `1c1234eb-d817-4db5-91e5-2845291cea5d` từ commit `a957029` ngày
+29/09/2026; trạng thái `SUCCESS` được xác nhận trong log GitHub Actions.
+
 ## Biến Môi Trường Đã Set Trên Cloud
 
 Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
@@ -108,6 +112,19 @@ cho phương án dự phòng chạy cục bộ. Lệnh `grade.py --no-bonus` v�
 cho kết quả tự chấm `100/100` điểm bắt buộc; hai bài dựng lại Docker image
 không chạy trong lượt kiểm tra này. Chất lượng phần trả lời trong `exercises.md`
 vẫn do giảng viên đánh giá.
+
+## Bonus — CI/CD Đã Chạy Thật
+
+- Workflow: [.github/workflows/ci.yml](.github/workflows/ci.yml).
+- Bằng chứng: [GitHub Actions run 36578951160](https://github.com/conanWinner/K4-L3B-DAY12-DoanQuangThang-2A202602395-CloudServicesAndDeployment/actions/runs/36578951160), commit `a957029`.
+- Job test: `68 passed, 2 deselected` cho CP1–CP4, không chạy các bài cần cloud trong CI.
+- Job build: Docker image được build thành công trên runner GitHub.
+- Job deploy: chỉ chạy khi push lên `main` và cả test, build đạt; đợi bản triển khai mới đạt `SUCCESS`.
+- Kiểm tra sau deploy: `/health` và `/ready` trả 200; `/ask` thiếu khóa trả 401.
+- Kiểm tra bonus tại máy: `13 passed`, bao gồm badge README báo `passing`.
+- GitHub Secret `RAILWAY_TOKEN` và Variable `PUBLIC_URL` đã được cấu hình. Tài liệu chỉ ghi tên secret, không ghi giá trị.
+
+Bonus đạt tiêu chí tự kiểm tra +10 điểm; tổng điểm bài lab vẫn bị giới hạn ở 100.
 
 ## Ảnh Chụp Màn Hình
 

@@ -107,6 +107,7 @@
         <a href="#cp3">CP3 · Bảo vệ API</a>
         <a href="#cp4">CP4 · Mở rộng</a>
         <a href="#cp5">CP5 · Railway</a>
+        <a href="#bonus">Bonus · CI/CD</a>
         <a href="#kiem-tra">Kết quả và việc còn lại</a>
       </nav>
     </aside>
@@ -122,7 +123,7 @@
           <div class="mini"><b>CP5: 9/9</b><span>Các bài kiểm tra áp dụng cho bản cloud đã đạt.</span></div>
           <div class="mini"><b>3 ảnh</b><span>Dashboard, log triển khai và /health đã có trong repo cục bộ.</span></div>
         </div>
-        <div class="callout"><strong>Trạng thái hiện tại:</strong> API công khai đã chạy và kiểm tra thành công; commit CP5 <code>f766425</code> đã có trên <code>origin/main</code>. Ba ảnh minh chứng đã được kiểm tra ở máy và đang chờ commit, push.</div>
+        <div class="callout"><strong>Trạng thái hiện tại:</strong> CP1–CP5, ba ảnh minh chứng và workflow bonus đã có trên GitHub. CI/CD đã chạy thật thành công; bộ kiểm tra bonus đạt 13/13, badge báo <code>passing</code>.</div>
       </section>
 
       <section id="cp0" class="card">
@@ -247,13 +248,25 @@ pytest tests/test_cp5.py -v
         <p class="note">Lab dùng LLM giả lập, nên phép thử này chứng minh luồng API, Redis, xác thực và giới hạn tốc độ; nó không chứng minh kết nối tới nhà cung cấp LLM trả phí.</p>
       </section>
 
+      <section id="bonus" class="card">
+        <div class="section-head"><div><span class="num">Bonus +10 điểm</span><h2>Tự động kiểm tra và triển khai bằng GitHub Actions</h2></div><span class="badge done">13/13 · badge passing</span></div>
+        <ol class="steps">
+          <li><strong>Viết workflow cho push và pull request vào main.</strong><p><a href=".github/workflows/ci.yml">ci.yml</a> có job test CP1–CP4 và job build Docker. Job deploy dùng <code>needs: [test, build]</code> và chỉ chạy với push lên <code>main</code>.</p></li>
+          <li><strong>Cấu hình quyền triển khai.</strong><p>Người dùng tạo Railway Project Token cho môi trường production và lưu vào GitHub Secret <code>RAILWAY_TOKEN</code>. Địa chỉ công khai nằm trong Variable <code>PUBLIC_URL</code>. Giá trị token không nằm trong repo.</p></li>
+          <li><strong>Đẩy workflow và theo dõi lần chạy thật.</strong><p>Kết nối HTTPS thiếu quyền cập nhật workflow; tôi dùng kết nối SSH đã xác minh để push commit <code>a957029</code>. GitHub chạy test thành công với 68 bài, build Docker thành công, rồi mới triển khai Railway.</p></li>
+          <li><strong>Kiểm tra đúng bản triển khai mới.</strong><p>Workflow đợi bản mới đạt SUCCESS, kiểm tra <code>/health</code>, <code>/ready</code> và xác nhận <code>/ask</code> thiếu khóa trả 401. Bản Railway từ lần chạy đầu là <code>1c1234eb-d817-4db5-91e5-2845291cea5d</code>.</p></li>
+          <li><strong>Xác minh badge và bộ kiểm tra bonus.</strong><p><code>pytest tests/test_bonus_cicd.py -q</code> đạt 13/13. Bài kiểm tra cuối tải badge GitHub và xác nhận trạng thái passing.</p></li>
+        </ol>
+        <p class="result"><b>Bằng chứng:</b> <a href="https://github.com/conanWinner/K4-L3B-DAY12-DoanQuangThang-2A202602395-CloudServicesAndDeployment/actions/runs/36578951160">GitHub Actions run 36578951160</a>. Tổng điểm cuối vẫn được giới hạn ở 100 theo quy định bài lab.</p>
+      </section>
+
       <section id="kiem-tra" class="card">
         <span class="num">Bàn giao</span>
         <h2>Đã xác minh và việc còn lại</h2>
         <p>Chạy lại ngày 29/09/2026: <code>pytest</code> cho CP1–CP5 đạt <strong>77 passed, 4 skipped, 2 deselected</strong>. Lệnh tự chấm <code>grade.py --no-bonus</code> báo <strong>100/100 điểm phần bắt buộc</strong> khi loại hai bài dựng lại Docker image. Đây là điểm tự chấm; giảng viên vẫn đánh giá chất lượng câu trả lời trong <code>exercises.md</code>.</p>
         <div class="two">
           <div class="mini"><strong>Đã có</strong><p>Commit riêng cho CP1–CP5 đã lên <code>origin/main</code>; mã chạy ở Docker Compose; Railway báo bản triển khai thành công; URL HTTPS đáp ứng đúng các phép thử CP5; <code>tests/test_cp5.py</code> đạt 9 bài áp dụng cho cloud. Ba ảnh minh chứng đã được kiểm tra.</p></div>
-          <div class="mini"><strong>Cần hoàn tất trước khi nộp</strong><p>Commit và push trang HTML, ba ảnh và cập nhật <code>DEPLOYMENT.md</code> lên GitHub. Hai bài kiểm tra dựng image Docker chưa chạy trong lượt kiểm tra cuối. Việc nộp link trên Codelab là bước riêng của học viên.</p></div>
+          <div class="mini"><strong>Trạng thái bàn giao</strong><p>Trang HTML, ba ảnh, tài liệu triển khai và workflow bonus đã được đưa lên GitHub. Docker image được build thành công trên GitHub Actions; bonus đạt 13 bài kiểm tra. Việc nộp link trên Codelab là bước riêng của học viên.</p></div>
         </div>
         <div class="callout wait">Không đưa <code>.env</code>, API key, Railway token hay giá trị <code>REDIS_URL</code> thật vào commit, ảnh chụp hoặc tài liệu công khai.</div>
         <p class="note">Nguồn đối chiếu: <a href="LAB_GUIDE.md">LAB_GUIDE.md</a>, <a href="DEPLOYMENT.md">DEPLOYMENT.md</a>, các tệp <code>app/</code>, Dockerfile, Compose và lịch sử Git tại thời điểm tạo trang.</p>
