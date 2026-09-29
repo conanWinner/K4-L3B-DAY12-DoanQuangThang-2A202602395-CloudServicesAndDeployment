@@ -1,7 +1,24 @@
 # K4 — Level 3B, Ngày 12: Hạ Tầng Cloud & Deployment (240 phút)
 
+![CI/CD](https://github.com/conanWinner/K4-L3B-DAY12-DoanQuangThang-2A202602395-CloudServicesAndDeployment/actions/workflows/ci.yml/badge.svg)
+
 Đưa một AI agent từ `localhost:8000` lên một địa chỉ công khai mà người khác
 gọi được, có bảo mật, có giới hạn chi phí, và không sập khi bạn deploy bản mới.
+
+## CI/CD đã cấu hình
+
+Workflow `.github/workflows/ci.yml` chạy kiểm tra CP1–CP4 và build Docker image
+khi push hoặc mở pull request vào `main`. Job deploy chỉ chạy khi push lên
+`main` và cả hai job trước đó đã thành công. Nó đợi bản triển khai mới trên
+Railway đạt `SUCCESS`, rồi kiểm tra `/health`, `/ready` và `/ask` thiếu khóa.
+
+Cấu hình trong GitHub → Settings → Secrets and variables → Actions:
+
+- Secret `RAILWAY_TOKEN`: Railway Project Token cho `day12-agent-lab`, môi trường `production`.
+- Variable `PUBLIC_URL`: `https://day12-agent-production-935d.up.railway.app`.
+
+Token nằm trong GitHub Secrets, không nằm trong mã nguồn. Mỗi bản triển khai
+từ workflow được ghi kèm SHA của commit GitHub.
 
 ---
 

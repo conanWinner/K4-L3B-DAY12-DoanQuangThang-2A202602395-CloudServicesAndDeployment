@@ -1,0 +1,122 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test CP1–CP4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run local checkpoint tests
+        env:
+          AGENT_API_KEY: ci-dummy
+          REDIS_URL: fake://
+        run: |
+          python -m pytest tests/test_cp1.py tests/test_cp2.py tests/test_cp3.py tests/test_cp4.py -m "not docker" -q
+
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production image
+        run: docker build -t day12-agent:ci .
+
+  deploy:
+    name: Deploy to Railway
+    needs: [test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: railway-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload and deploy tested commit
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "Missing RAILWAY_TOKEN repository secret" >&2
+            exit 1
+          fi
+          railway_cli() {
+            npm exec --yes --package=@railway/cli@5.63.1 -- railway "$@"
+          }
+          deployment_list() {
+            railway_cli deployment list \
+              --project d3f0be7a-e95f-454e-8a75-5c4d9f4f2cc0 \
+              --environment production \
+              --service day12-agent \
+              --limit 1 --json
+          }
+          previous_id=$(deployment_list | python3 -c 'import json,sys; rows=json.load(sys.stdin); print(rows[0]["id"] if rows else "")')
+          npm exec --yes --package=@railway/cli@5.63.1 -- railway up \
+            --project d3f0be7a-e95f-454e-8a75-5c4d9f4f2cc0 \
+            --environment production \
+            --service day12-agent \
+            --message "GitHub Actions ${GITHUB_SHA}"
+          # GitHub đặt CI=true: railway up có thể kết thúc sau build.
+          # Đợi chính bản triển khai mới đạt SUCCESS trước khi gọi smoke test.
+          for attempt in $(seq 1 40); do
+            latest=$(deployment_list | python3 -c 'import json,sys; rows=json.load(sys.stdin); print(rows[0]["id"] + " " + rows[0]["status"] if rows else "none none")')
+            read -r latest_id latest_status <<< "$latest"
+            if [ "$latest_id" != "$previous_id" ]; then
+              if [ "$latest_status" = "SUCCESS" ]; then
+                echo "Railway deployment succeeded: $latest_id"
+                break
+              fi
+              case "$latest_status" in
+                FAILED|CRASHED|CANCELED|CANCELLED|REMOVED)
+                  echo "Railway deployment ended: $latest_status" >&2
+                  exit 1
+                  ;;
+              esac
+            fi
+            if [ "$attempt" -eq 40 ]; then
+              echo "Timed out waiting for the new Railway deployment" >&2
+              exit 1
+            fi
+            sleep 6
+          done
+      - name: Smoke test public API
+        env:
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          if [ -z "$PUBLIC_URL" ]; then
+            echo "Missing PUBLIC_URL repository variable" >&2
+            exit 1
+          fi
+          PUBLIC_URL="${PUBLIC_URL%/}"
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if curl --fail --silent --show-error "$PUBLIC_URL/health" \
+              && curl --fail --silent --show-error "$PUBLIC_URL/ready"; then
+              status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+                --request POST "$PUBLIC_URL/ask" \
+                --header 'Content-Type: application/json' \
+                --data '{"question":"Hello"}' || true)
+              if [ "$status" = 401 ]; then
+                exit 0
+              fi
+            fi
+            sleep 6
+          done
+          echo "Public API did not become ready" >&2
+          exit 1

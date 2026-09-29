@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Quy trình thực hiện CP1–CP5 · Day 12 Agent Lab</title>
+  <style>
+    :root {
+      --ink: #17283b;
+      --muted: #52657a;
+      --line: #d9e3ee;
+      --paper: #f4f7fb;
+      --card: #fff;
+      --navy: #10263d;
+      --blue: #1264b4;
+      --teal: #087d73;
+      --amber: #9a5b03;
+      --soft-blue: #eaf3fc;
+      --soft-teal: #e8f7f3;
+      --soft-amber: #fff3dc;
+      --shadow: 0 16px 42px rgba(15, 40, 65, .08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.68 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    a { color: var(--blue); text-underline-offset: .2em; }
+    a:hover { color: #08477f; }
+    :focus-visible { outline: 3px solid #e9a23b; outline-offset: 3px; border-radius: 4px; }
+    .hero { background: radial-gradient(circle at 85% 5%, #2b7294 0, transparent 32%), linear-gradient(135deg, #10263d, #164458); color: #fff; padding: 66px max(24px, calc((100vw - 1180px)/2)) 56px; }
+    .eyebrow { margin: 0 0 12px; color: #9ee7de; font-size: .76rem; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { max-width: 850px; margin: 0; font-size: clamp(2.1rem, 5vw, 4rem); line-height: 1.12; letter-spacing: -.035em; }
+    .hero p { max-width: 780px; margin: 20px 0 0; color: #d6e6ef; font-size: 1.07rem; }
+    .hero-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 29px; }
+    .hero-meta span { padding: 7px 12px; border: 1px solid #7897a7; border-radius: 999px; color: #e5f3f8; font-size: .83rem; }
+    .layout { max-width: 1180px; margin: 0 auto; padding: 34px 24px 80px; display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 28px; align-items: start; }
+    .sidebar { position: sticky; top: 24px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+    .sidebar strong { display: block; margin: 0 0 9px; font-size: .84rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .sidebar a { display: block; padding: 8px 10px; border-radius: 8px; color: var(--ink); text-decoration: none; font-size: .91rem; }
+    .sidebar a:hover { background: var(--soft-blue); color: var(--blue); }
+    main { min-width: 0; }
+    section { scroll-margin-top: 22px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: clamp(22px, 3.5vw, 34px); box-shadow: var(--shadow); margin-bottom: 24px; }
+    h2 { margin: 0 0 12px; font-size: clamp(1.45rem, 2.6vw, 2rem); line-height: 1.22; letter-spacing: -.02em; }
+    h3 { margin: 25px 0 8px; font-size: 1.08rem; }
+    p { margin: 8px 0 15px; }
+    .muted { color: var(--muted); }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .num { display: inline-block; margin-bottom: 9px; color: var(--teal); font-weight: 800; font-size: .77rem; letter-spacing: .13em; text-transform: uppercase; }
+    .badge { display: inline-block; white-space: nowrap; padding: 5px 10px; border-radius: 999px; font-size: .75rem; font-weight: 800; letter-spacing: .02em; }
+    .done { background: var(--soft-teal); color: #086157; }
+    .partial { background: var(--soft-amber); color: #80500a; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 21px 0; }
+    .mini { border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: #fcfdff; }
+    .mini b { display: block; font-size: 1.23rem; color: var(--navy); }
+    .mini span { display: block; color: var(--muted); font-size: .81rem; line-height: 1.45; }
+    .callout { border-left: 4px solid var(--teal); background: var(--soft-teal); padding: 13px 17px; border-radius: 0 10px 10px 0; margin: 17px 0; }
+    .callout.wait { border-left-color: #c6831a; background: var(--soft-amber); }
+    .steps { list-style: none; padding: 0; margin: 16px 0 0; counter-reset: step; }
+    .steps li { counter-increment: step; position: relative; padding: 0 0 20px 42px; border-left: 2px solid var(--line); margin-left: 13px; }
+    .steps li:last-child { border-left-color: transparent; padding-bottom: 0; }
+    .steps li::before { content: counter(step); position: absolute; left: -15px; top: 1px; width: 28px; height: 28px; display: grid; place-items: center; background: var(--navy); color: #fff; border-radius: 50%; font-size: .82rem; font-weight: 700; }
+    .steps strong { display: block; line-height: 1.45; }
+    .steps p { margin: 5px 0 0; color: var(--muted); }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace; }
+    code { color: #174b70; background: #edf4fa; padding: .1em .25em; border-radius: 4px; font-size: .91em; }
+    pre { margin: 13px 0 19px; padding: 18px; background: #11283d; color: #f0f7fc; border-radius: 12px; overflow-x: auto; line-height: 1.52; font-size: .85rem; }
+    pre code { color: inherit; background: transparent; padding: 0; font-size: inherit; }
+    .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 0; }
+    .flow span { background: var(--soft-blue); color: #174c73; border: 1px solid #cddff0; padding: 8px 11px; border-radius: 9px; font-size: .84rem; font-weight: 700; }
+    .flow i { font-style: normal; color: var(--teal); font-weight: 900; }
+    .files { margin: 15px 0 0; padding-left: 20px; }
+    .files li { margin: 5px 0; }
+    .result { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 14px; font-size: .92rem; }
+    .result b { color: var(--teal); }
+    .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .note { color: var(--muted); font-size: .9rem; }
+    .evidence { margin: 18px 0 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #f9fbfe; }
+    .evidence img { display: block; width: 100%; height: auto; }
+    .evidence figcaption { padding: 9px 13px; color: var(--muted); font-size: .83rem; border-top: 1px solid var(--line); }
+    table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: .91rem; }
+    th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    footer { max-width: 1180px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: .84rem; }
+    @media (max-width: 850px) { .layout { display: block; padding-top: 22px; } .sidebar { position: static; margin-bottom: 20px; } .sidebar nav { display: flex; flex-wrap: wrap; } .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 650px) { .hero { padding: 42px 24px; } .two { grid-template-columns: 1fr; } .card { padding: 22px; } }
+    @media print { body { background: white; } .hero { color: black; background: white; padding: 0 0 22px; } .hero p, .hero-meta span, .eyebrow { color: black; } .layout { display: block; padding: 0; } .sidebar { display: none; } .card { box-shadow: none; break-inside: avoid; } pre { white-space: pre-wrap; } footer { padding: 0; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">Nhật ký thực hiện · K4 Level 3B · Day 12</p>
+    <h1>Từ ứng dụng chạy trên máy đến API công khai</h1>
+    <p>Quy trình tôi đã thực hiện để hoàn thành các checkpoint CP1–CP5: sửa tệp nào, làm theo thứ tự nào, kiểm tra bằng gì và phần nào vẫn cần bổ sung trước khi nộp.</p>
+    <div class="hero-meta"><span>Đoàn Quang Thắng · 2A202602395</span><span>FastAPI + Redis + Docker + Railway</span><span>Cập nhật: 29/09/2026</span></div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Mục lục">
+      <strong>Đi đến phần</strong>
+      <nav>
+        <a href="#tong-quan">Tổng quan</a>
+        <a href="#cp0">Chuẩn bị</a>
+        <a href="#cp1">CP1 · Cấu hình và log</a>
+        <a href="#cp2">CP2 · Docker</a>
+        <a href="#cp3">CP3 · Bảo vệ API</a>
+        <a href="#cp4">CP4 · Mở rộng</a>
+        <a href="#cp5">CP5 · Railway</a>
+        <a href="#kiem-tra">Kết quả và việc còn lại</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section id="tong-quan" class="card">
+        <span class="num">Bức tranh chung</span>
+        <h2>Ứng dụng hoạt động như thế nào?</h2>
+        <p>Người dùng gọi <code>/ask</code>. API kiểm tra khóa, giới hạn số lần gọi và ngân sách trước khi hỏi LLM giả lập. Lịch sử hội thoại và bộ đếm được lưu ở Redis. Trên máy, Nginx phân phối yêu cầu tới ba bản sao ứng dụng; trên Railway, dịch vụ web kết nối Redis của cùng dự án.</p>
+        <div class="flow" aria-label="Luồng yêu cầu"><span>Người dùng</span><i>→</i><span>API /ask</span><i>→</i><span>Xác thực</span><i>→</i><span>Giới hạn và ngân sách</span><i>→</i><span>Redis + LLM giả lập</span><i>→</i><span>Trả lời</span></div>
+        <div class="grid">
+          <div class="mini"><b>CP1–CP5</b><span>Mỗi checkpoint có commit riêng trên GitHub.</span></div>
+          <div class="mini"><b>CP5: 9/9</b><span>Các bài kiểm tra áp dụng cho bản cloud đã đạt.</span></div>
+          <div class="mini"><b>3 ảnh</b><span>Dashboard, log triển khai và /health đã có trong repo cục bộ.</span></div>
+        </div>
+        <div class="callout"><strong>Trạng thái hiện tại:</strong> API công khai đã chạy và kiểm tra thành công; commit CP5 <code>f766425</code> đã có trên <code>origin/main</code>. Ba ảnh minh chứng đã được kiểm tra ở máy và đang chờ commit, push.</div>
+      </section>
+
+      <section id="cp0" class="card">
+        <div class="section-head"><div><span class="num">Bước nền</span><h2>Chuẩn bị môi trường</h2></div><span class="badge done">Đã dùng cho CP1–CP5</span></div>
+        <ol class="steps">
+          <li><strong>Đọc hướng dẫn và bài kiểm tra.</strong><p>Tôi dùng <a href="LAB_GUIDE.md">LAB_GUIDE.md</a> để xác định mục tiêu từng checkpoint, rồi đọc các bài kiểm tra tương ứng trước khi sửa mã.</p></li>
+          <li><strong>Chuẩn bị Python, thư viện và khóa cục bộ.</strong><p>Môi trường ảo <code>.venv</code> cài các gói trong <code>requirements.txt</code>. Khóa <code>AGENT_API_KEY</code> nằm trong <code>.env</code> cục bộ; tệp này bị loại khỏi Git và gói Docker.</p></li>
+          <li><strong>Bật Redis trên máy.</strong><p>Redis phục vụ giới hạn tốc độ, ngân sách và lịch sử. Các bài kiểm tra dùng Redis giả khi cần, còn quá trình chạy Compose dùng Redis thật.</p></li>
+        </ol>
+        <pre><code>python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+docker compose up -d redis</code></pre>
+      </section>
+
+      <section id="cp1" class="card">
+        <div class="section-head"><div><span class="num">Checkpoint 1</span><h2>Tách cấu hình, thêm health check và log JSON</h2></div><span class="badge done">Đã commit · ff25b23</span></div>
+        <p>Mục tiêu là dùng cùng mã nguồn ở máy cá nhân và trên cloud. Giá trị thay đổi theo môi trường được đọc từ biến môi trường, không ghi cứng trong mã.</p>
+        <ol class="steps">
+          <li><strong>Tạo cấu hình tập trung.</strong><p>Trong <a href="app/config.py">app/config.py</a>, tôi khai báo <code>PORT</code>, <code>REDIS_URL</code>, giới hạn gọi, ngân sách, mức log và <code>AGENT_API_KEY</code>. Khóa API là trường bắt buộc, không có giá trị mặc định.</p></li>
+          <li><strong>Ghi log một dòng JSON.</strong><p><a href="app/logging_utils.py">app/logging_utils.py</a> ghi tên sự kiện, mức log, thời gian UTC và các trường bổ sung ra stdout. Một sự kiện là một dòng để hệ thống cloud có thể lọc log.</p></li>
+          <li><strong>Thêm <code>GET /health</code>.</strong><p>Endpoint trong <a href="app/main.py">app/main.py</a> trả trạng thái process, tên dịch vụ và phiên bản. Nó không gọi Redis, vì mất kết nối Redis không có nghĩa process cần khởi động lại.</p></li>
+        </ol>
+        <pre><code>pytest tests/test_cp1.py -v
+curl -i http://localhost:8000/health
+# Mong đợi: HTTP 200, status = "ok"</code></pre>
+        <p class="result"><b>Điểm mấu chốt:</b> thiếu khóa thì ứng dụng báo lỗi cấu hình ngay khi khởi động; <code>/health</code> chỉ kiểm tra process.</p>
+      </section>
+
+      <section id="cp2" class="card">
+        <div class="section-head"><div><span class="num">Checkpoint 2</span><h2>Đóng gói ứng dụng bằng Docker</h2></div><span class="badge done">Đã commit · 4268364</span></div>
+        <ol class="steps">
+          <li><strong>Viết Dockerfile hai giai đoạn.</strong><p><a href="Dockerfile">Dockerfile</a> cài thư viện trong giai đoạn build, sau đó chỉ chuyển kết quả sang image chạy bằng Python slim. Tệp thư viện được copy trước mã nguồn để tận dụng bộ nhớ đệm khi build.</p></li>
+          <li><strong>Chạy bằng user thường và đọc cổng cloud.</strong><p>Container dùng <code>appuser</code>, lắng nghe trên <code>0.0.0.0</code> và dùng <code>${PORT:-8000}</code>. Docker health check gọi <code>/health</code>.</p></li>
+          <li><strong>Giữ bí mật khỏi image.</strong><p><code>.dockerignore</code> loại <code>.env</code>, Git, môi trường ảo và các tệp cache. Khóa được đưa vào lúc chạy, không nhúng trong image.</p></li>
+          <li><strong>Ghép các dịch vụ bằng Compose.</strong><p><a href="docker-compose.yml">docker-compose.yml</a> khai báo Redis, ứng dụng và Nginx. Ứng dụng nhận khóa từ biến môi trường; địa chỉ Redis dùng tên service <code>redis</code> trong mạng Compose.</p></li>
+        </ol>
+        <pre><code>docker build -t day12-agent:prod .
+docker compose up -d --build
+docker compose ps
+pytest tests/test_cp2.py -v</code></pre>
+        <p class="result"><b>Điểm mấu chốt:</b> image có môi trường chạy nhất quán; Nginx giữ cổng máy <code>8000</code> để về sau có thể chạy nhiều bản sao ứng dụng.</p>
+      </section>
+
+      <section id="cp3" class="card">
+        <div class="section-head"><div><span class="num">Checkpoint 3</span><h2>Bảo vệ API trước khi gọi LLM</h2></div><span class="badge done">Đã commit · d484150</span></div>
+        <ol class="steps">
+          <li><strong>Kiểm tra API key.</strong><p><a href="app/auth.py">app/auth.py</a> đọc header <code>X-API-Key</code>, so sánh bằng <code>secrets.compare_digest</code> và trả <code>401</code> nếu thiếu hoặc sai khóa. <code>X-User-Id</code> xác định người dùng cho bộ đếm.</p></li>
+          <li><strong>Giới hạn 10 yêu cầu trong 60 giây.</strong><p><a href="app/rate_limiter.py">app/rate_limiter.py</a> dùng Redis Sorted Set: bỏ mốc thời gian cũ, đếm lượt còn trong cửa sổ trượt, chặn bằng <code>429</code> khi đủ hạn mức, rồi mới ghi lượt hợp lệ.</p></li>
+          <li><strong>Giới hạn ngân sách tháng.</strong><p><a href="app/cost_guard.py">app/cost_guard.py</a> lưu chi phí theo người dùng và tháng, trả <code>402</code> nếu hết ngân sách. Sau một lượt thành công, chi phí mới được cộng dồn.</p></li>
+          <li><strong>Nối các lớp vào <code>POST /ask</code>.</strong><p>Thứ tự trong <code>app/main.py</code> là xác thực → giới hạn tốc độ → kiểm tra ngân sách → đọc lịch sử → gọi LLM giả lập → lưu hai tin nhắn → ghi chi phí và log. Các yêu cầu bị chặn dừng trước bước gọi LLM.</p></li>
+          <li><strong>Sửa cách thử bằng terminal.</strong><p>Docker Compose tự đọc <code>.env</code>, nhưng lệnh <code>curl</code> trong terminal thì không. Tôi nạp biến trước khi thử, rồi dùng dấu nháy kép trong header để <code>$AGENT_API_KEY</code> được thay bằng giá trị thật.</p></li>
+        </ol>
+        <pre><code>set -a
+source .env
+set +a
+
+curl -i -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question":"Hello"}'
+# Thiếu key → 401
+
+curl -i -X POST http://localhost:8000/ask \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $AGENT_API_KEY" \
+  -H "X-User-Id: sv01" \
+  -d '{"question":"Docker là gì?"}'
+# Có key → 200
+
+pytest tests/test_cp3.py -v</code></pre>
+        <p class="result"><b>Điểm mấu chốt:</b> lỗi gọi có khóa ban đầu đến từ biến shell chưa được nạp hoặc header chứa nguyên chữ <code>$AGENT_API_KEY</code>, không phải từ cơ chế xác thực.</p>
+      </section>
+
+      <section id="cp4" class="card">
+        <div class="section-head"><div><span class="num">Checkpoint 4</span><h2>Lưu trạng thái ở Redis và chạy ba bản sao trên máy</h2></div><span class="badge done">Đã commit · fb42f12</span></div>
+        <ol class="steps">
+          <li><strong>Đưa lịch sử hội thoại ra khỏi bộ nhớ process.</strong><p><a href="app/store.py">app/store.py</a> lưu tin nhắn theo người dùng trong Redis List. Mỗi lần ghi, ứng dụng giữ tối đa 20 tin gần nhất và gia hạn thời gian lưu 7 ngày.</p></li>
+          <li><strong>Thêm <code>GET /ready</code>.</strong><p>Endpoint này gọi Redis <code>ping</code>. Redis sẵn sàng thì trả <code>200</code>; mất kết nối hoặc đang tắt thì trả <code>503</code>. Nó khác <code>/health</code>, vốn không phụ thuộc Redis.</p></li>
+          <li><strong>Xử lý tín hiệu tắt.</strong><p><a href="app/lifecycle.py">app/lifecycle.py</a> đánh dấu ứng dụng đang tắt khi nhận SIGTERM/SIGINT, đồng thời chuyển tín hiệu cho handler trước đó của máy chủ để quá trình tắt vẫn hoàn tất.</p></li>
+          <li><strong>Chạy ba container ứng dụng.</strong><p><a href="nginx/nginx.conf">nginx/nginx.conf</a> chuyển yêu cầu vào nhóm ứng dụng. Ba bản sao dùng chung Redis nên lịch sử vẫn liên tục khi yêu cầu đi qua các container khác nhau.</p></li>
+        </ol>
+        <pre><code>docker compose up -d --build --scale agent=3
+docker compose ps
+curl -i http://localhost:8000/ready
+pytest tests/test_cp4.py -v</code></pre>
+        <p class="result"><b>Đã xác minh tại máy:</b> ba container agent khỏe mạnh sau Nginx, <code>/health</code> và <code>/ready</code> trả <code>200</code>, Redis giữ lịch sử và các giới hạn lưu trữ. Việc chạy ba bản sao này là kiểm tra cục bộ; Railway hiện dùng một dịch vụ web.</p>
+      </section>
+
+      <section id="cp5" class="card">
+        <div class="section-head"><div><span class="num">Checkpoint 5</span><h2>Triển khai lên Railway và kiểm tra URL công khai</h2></div><span class="badge done">API và ảnh đã kiểm tra</span></div>
+        <ol class="steps">
+          <li><strong>Chuẩn bị gói triển khai.</strong><p>Tôi thêm <code>.railwayignore</code> để loại <code>.env</code>, <code>.venv</code> và <code>railway.toml</code> cũ khỏi gói upload. Dockerfile đã sẵn sàng đọc cổng do Railway cấp.</p></li>
+          <li><strong>Đăng nhập và tạo tài nguyên Railway.</strong><p>Sau khi người dùng đăng nhập, tôi tạo project <code>day12-agent-lab</code>, Redis service và web service <code>day12-agent</code>. Redis được triển khai thành công trước web service.</p></li>
+          <li><strong>Cấu hình biến môi trường.</strong><p>Web service nhận <code>REDIS_URL</code> dưới dạng tham chiếu tới Redis của cùng project, một <code>AGENT_API_KEY</code> riêng cho cloud, <code>RATE_LIMIT_PER_MINUTE=10</code>, <code>MONTHLY_BUDGET_USD=10.0</code> và <code>LOG_LEVEL=INFO</code>. Giá trị khóa không được đưa vào mã hoặc trang này.</p></li>
+          <li><strong>Đặt kiểm tra sức khỏe và triển khai.</strong><p>Railway dùng <code>/ready</code> làm health check. Tôi tải mã bằng Railway CLI; bản triển khai <code>714019a5-6e9f-4439-a35d-4f84eb9bb448</code> báo <code>SUCCESS</code> và <code>RUNNING</code>. Người dùng cung cấp URL HTTPS công khai để tôi kiểm tra tiếp.</p></li>
+          <li><strong>Thử API qua Internet.</strong><p>Tôi gọi <code>/health</code>, <code>/ready</code>, <code>/ask</code> thiếu khóa, <code>/ask</code> có khóa cloud và 15 lượt cùng một người dùng. Kết quả được ghi trong <a href="DEPLOYMENT.md">DEPLOYMENT.md</a>.</p></li>
+        </ol>
+        <div class="two">
+          <div class="mini"><b><a href="https://day12-agent-production-935d.up.railway.app/health">/health → 200</a></b><span>Process ứng dụng đang trả lời.</span></div>
+          <div class="mini"><b><a href="https://day12-agent-production-935d.up.railway.app/ready">/ready → 200</a></b><span>Redis trên cloud đã kết nối.</span></div>
+        </div>
+        <pre><code>npm exec --yes --package=@railway/cli -- railway up \
+  --service day12-agent --environment production
+
+pytest tests/test_cp5.py -v
+# Đã kiểm tra: 9 passed, 4 skipped
+# 4 bài skipped chỉ dành cho phương án chạy cục bộ.</code></pre>
+        <table aria-label="Kết quả thử API công khai">
+          <thead><tr><th>Phép thử</th><th>Kết quả thật</th></tr></thead>
+          <tbody>
+            <tr><td><code>GET /health</code></td><td><code>200</code>, <code>status: ok</code></td></tr>
+            <tr><td><code>GET /ready</code></td><td><code>200</code>, <code>redis: true</code></td></tr>
+            <tr><td><code>POST /ask</code> thiếu khóa</td><td><code>401</code></td></tr>
+            <tr><td><code>POST /ask</code> có khóa cloud</td><td><code>200</code>, có câu trả lời</td></tr>
+            <tr><td>15 lượt liên tiếp, cùng người dùng</td><td>10 lượt <code>200</code>, 5 lượt <code>429</code></td></tr>
+          </tbody>
+        </table>
+        <h3>Ảnh minh chứng</h3>
+        <figure class="evidence"><img src="screenshots/Dashboard_1.png" alt="Railway dashboard: day12-agent và Redis đều Online" loading="lazy"><figcaption>Railway dashboard: ứng dụng và Redis đang Online.</figcaption></figure>
+        <figure class="evidence"><img src="screenshots/Dashboard_2.png" alt="Railway: bản triển khai Active và log yêu cầu health, ready, ask" loading="lazy"><figcaption>Bản triển khai Active; log ghi nhận phản hồi 200 và 401 tương ứng.</figcaption></figure>
+        <figure class="evidence"><img src="screenshots/Health.png" alt="Trình duyệt mở URL health và nhận JSON có status ok" loading="lazy"><figcaption>URL công khai /health trả JSON với <code>status: ok</code>.</figcaption></figure>
+        <p class="note">Lab dùng LLM giả lập, nên phép thử này chứng minh luồng API, Redis, xác thực và giới hạn tốc độ; nó không chứng minh kết nối tới nhà cung cấp LLM trả phí.</p>
+      </section>
+
+      <section id="kiem-tra" class="card">
+        <span class="num">Bàn giao</span>
+        <h2>Đã xác minh và việc còn lại</h2>
+        <p>Chạy lại ngày 29/09/2026: <code>pytest</code> cho CP1–CP5 đạt <strong>77 passed, 4 skipped, 2 deselected</strong>. Lệnh tự chấm <code>grade.py --no-bonus</code> báo <strong>100/100 điểm phần bắt buộc</strong> khi loại hai bài dựng lại Docker image. Đây là điểm tự chấm; giảng viên vẫn đánh giá chất lượng câu trả lời trong <code>exercises.md</code>.</p>
+        <div class="two">
+          <div class="mini"><strong>Đã có</strong><p>Commit riêng cho CP1–CP5 đã lên <code>origin/main</code>; mã chạy ở Docker Compose; Railway báo bản triển khai thành công; URL HTTPS đáp ứng đúng các phép thử CP5; <code>tests/test_cp5.py</code> đạt 9 bài áp dụng cho cloud. Ba ảnh minh chứng đã được kiểm tra.</p></div>
+          <div class="mini"><strong>Cần hoàn tất trước khi nộp</strong><p>Commit và push trang HTML, ba ảnh và cập nhật <code>DEPLOYMENT.md</code> lên GitHub. Hai bài kiểm tra dựng image Docker chưa chạy trong lượt kiểm tra cuối. Việc nộp link trên Codelab là bước riêng của học viên.</p></div>
+        </div>
+        <div class="callout wait">Không đưa <code>.env</code>, API key, Railway token hay giá trị <code>REDIS_URL</code> thật vào commit, ảnh chụp hoặc tài liệu công khai.</div>
+        <p class="note">Nguồn đối chiếu: <a href="LAB_GUIDE.md">LAB_GUIDE.md</a>, <a href="DEPLOYMENT.md">DEPLOYMENT.md</a>, các tệp <code>app/</code>, Dockerfile, Compose và lịch sử Git tại thời điểm tạo trang.</p>
+      </section>
+    </main>
+  </div>
+  <footer>Quy trình thực hiện CP1–CP5 · Bản HTML tự chứa, mở trực tiếp trong trình duyệt hoặc in ra PDF.</footer>
+</body>
+</html>
