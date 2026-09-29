@@ -1,0 +1,4 @@
+# Railway CLI respects .gitignore too. Keep local secrets and legacy config out.
+.env
+.venv/
+railway.toml

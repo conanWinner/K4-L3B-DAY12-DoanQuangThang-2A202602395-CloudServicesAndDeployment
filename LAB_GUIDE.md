@@ -534,7 +534,7 @@ pytest tests/test_cp4.py -v
 
 | Platform | Độ khó | Free tier | Redis kèm theo |
 |----------|--------|-----------|----------------|
-| **Railway** | ⭐ | $5 credit dùng thử | Có, thêm 1 click |
+| **Railway** | ⭐ | $5 credit dùng thử tối đa 30 ngày; sau đó Free có $1/tháng | Có, thêm 1 click |
 | **Render** | ⭐⭐ | 750 giờ/tháng | Có (Key Value) |
 | Cloud Run | ⭐⭐⭐ | 2 triệu request/tháng | Không — cần Memorystore/Upstash |
 
@@ -546,20 +546,29 @@ Chọn Railway nếu bạn muốn xong nhanh. Cả hai đều đọc `Dockerfile
 npm i -g @railway/cli
 railway login
 railway init                       # đặt tên project
-railway add --database redis       # tạo Redis, tự sinh biến REDIS_URL
-
-railway variables --set AGENT_API_KEY=<khóa của bạn> \
-                  --set RATE_LIMIT_PER_MINUTE=10 \
-                  --set MONTHLY_BUDGET_USD=10.0 \
-                  --set LOG_LEVEL=INFO
-
-railway up                         # build từ Dockerfile và deploy
-railway domain                     # sinh URL công khai
-railway logs                       # xem log khi có sự cố
+railway add --database redis       # tạo Redis service riêng
+railway add --service day12-agent  # tạo web service
 ```
 
-Kiểm tra biến `REDIS_URL` đã được gắn vào service agent chưa (dashboard →
-service → Variables). Railway tự set `PORT` — đừng ghi đè.
+Nếu không cài CLI toàn cục, dùng `npm exec --yes --package=@railway/cli -- railway`
+thay cho `railway` ở mỗi lệnh. Trong Railway dashboard, chọn service
+`day12-agent` rồi đặt Variables: `AGENT_API_KEY` (khóa mới, giữ kín),
+`REDIS_URL` tham chiếu `${{Redis.REDIS_URL}}` (thay `Redis` bằng đúng tên
+Redis service), `RATE_LIMIT_PER_MINUTE=10`, `MONTHLY_BUDGET_USD=10.0`,
+`LOG_LEVEL=INFO`. Railway tự set `PORT` — đừng ghi đè. Đặt healthcheck của
+web service là `/ready` để xác nhận Redis sẵn sàng.
+
+```bash
+railway up --service day12-agent      # upload code, build Dockerfile và deploy
+railway domain --service day12-agent  # sinh URL HTTPS công khai
+railway logs --service day12-agent    # xem log khi có sự cố
+```
+
+`railway.toml` là cấu hình cũ; Railway không cho service mới dùng Config as
+Code qua file này. File được giữ để tham khảo bài lab nhưng `.railwayignore`
+loại khỏi gói upload. Railway CLI tôn trọng cả `.gitignore`, nên `.env` cục bộ
+không được tải lên. [Tài liệu cấu hình](https://docs.railway.com/config-as-code),
+[cách `railway up` chọn file](https://docs.railway.com/cli/up).
 
 ### Đường Render
 

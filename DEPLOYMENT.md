@@ -1,7 +1,7 @@
 # Thông Tin Deploy — Checkpoint 5
 
-> Điền file này sau khi deploy xong. `pytest tests/test_cp5.py` đọc file này
-> để tìm địa chỉ service của bạn và gọi thử.
+> Mã nguồn đã triển khai trên Railway. Các kết quả gọi API bên dưới được kiểm tra
+> qua URL công khai. `pytest tests/test_cp5.py` đọc file này.
 >
 > **Chỉ ghi TÊN biến môi trường, tuyệt đối không dán giá trị API key vào đây.**
 > Repo này công khai — dán khóa vào là mất khóa.
@@ -10,17 +10,20 @@
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | (điền họ tên) |
-| Mã học viên | (điền mã học viên) |
-| Repo | (điền link repo K4-L3B-DAY12-HoVaTen-MSSV-CloudServicesAndDeployment) |
+| Họ và tên | Đoàn Quang Thắng |
+| Mã học viên | 2A202602395 |
+| Repo | https://github.com/conanWinner/K4-L3B-DAY12-DoanQuangThang-2A202602395-CloudServicesAndDeployment |
 
 ## Service
 
 | Mục | Nội dung |
 |-----|----------|
-| Public URL | https://TODO-thay-bang-url-that.up.railway.app |
-| Platform | Railway / Render / Cloud Run — (điền platform bạn dùng) |
-| Ngày deploy | (điền ngày) |
+| Public URL | https://day12-agent-production-935d.up.railway.app |
+| Platform | Railway |
+| Ngày deploy | 29/09/2026 |
+| Trạng thái | Redis và `day12-agent` đều `SUCCESS`, tiến trình `RUNNING`; URL công khai hoạt động |
+| Bản triển khai | `714019a5-6e9f-4439-a35d-4f84eb9bb448` |
+| Kiểm tra sức khỏe | Railway dùng `/ready`; bản triển khai dùng `Dockerfile` |
 
 ## Biến Môi Trường Đã Set Trên Cloud
 
@@ -28,9 +31,9 @@ Ghi tên biến và **nguồn giá trị**, không ghi giá trị:
 
 | Biến | Đã set | Ghi chú |
 |------|--------|---------|
-| `PORT` | ✅ | platform tự gán |
-| `AGENT_API_KEY` | ✅ | đặt trong dashboard, không nằm trong repo |
-| `REDIS_URL` | ✅ | (điền: Redis add-on của platform / Upstash / ...) |
+| `PORT` | Tự động | Railway cấp cổng cho service; ứng dụng đọc `$PORT` |
+| `AGENT_API_KEY` | ✅ | Khóa riêng của cloud, đặt qua Railway CLI stdin; giá trị không nằm trong repo |
+| `REDIS_URL` | ✅ | Biến tham chiếu `${{Redis.REDIS_URL}}` của cùng project |
 | `RATE_LIMIT_PER_MINUTE` | ✅ | 10 |
 | `MONTHLY_BUDGET_USD` | ✅ | 10.0 |
 | `LOG_LEVEL` | ✅ | INFO |
@@ -54,7 +57,7 @@ curl -i -X POST <URL>/ask \
 # 4. Có API key — mong đợi 200 kèm câu trả lời
 curl -i -X POST <URL>/ask \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $AGENT_API_KEY" \
+  -H "X-API-Key: $DEPLOY_API_KEY" \
   -H "X-User-Id: sv-test" \
   -d '{"question":"Deploy là gì?"}'
 
@@ -62,7 +65,7 @@ curl -i -X POST <URL>/ask \
 for i in $(seq 1 15); do
   curl -s -o /dev/null -w "%{http_code} " -X POST <URL>/ask \
     -H "Content-Type: application/json" \
-    -H "X-API-Key: $AGENT_API_KEY" \
+    -H "X-API-Key: $DEPLOY_API_KEY" \
     -H "X-User-Id: sv-test" \
     -d '{"question":"test"}'
 done; echo
@@ -70,10 +73,14 @@ done; echo
 
 ## Kết Quả Chạy Thật
 
-Dán output của các lệnh trên vào đây:
+Đã kiểm tra qua URL công khai ngày 29/09/2026:
 
-```
-(điền output)
+```text
+GET  /health                 200  {"status":"ok","service":"day12-agent","version":"1.0.0"}
+GET  /ready                  200  {"status":"ready","redis":true}
+POST /ask (không có key)     401
+POST /ask (có key cloud)    200  có câu trả lời
+POST /ask x15, cùng user     200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
 
 ## Ảnh Chụp Màn Hình
@@ -96,6 +103,4 @@ Không đăng ký được tài khoản cloud? Vẫn nộp được bài, nhưng
    `http://localhost:8000`
 5. Ghi rõ lý do không deploy được vào phần dưới đây:
 
-```
-(điền lý do nếu dùng phương án dự phòng, ngược lại xóa mục này)
-```
+Không áp dụng: đã chọn Railway.
